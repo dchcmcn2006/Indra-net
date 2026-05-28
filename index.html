@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인드라망 교실 — 연기(緣起)를 느끼다</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-deep:   #0b0917;
+  --bg-panel:  #110e20;
+  --bg-card:   #1a1530;
+  --bg-input:  #1e1838;
+  --border:    #2e2550;
+  --border-hi: #4a38a0;
+  --accent:    #7c5cfc;
+  --accent-hi: #a07fff;
+  --text-main: #e8e0ff;
+  --text-sub:  #9080c0;
+  --text-dim:  #4a3878;
+}
+html, body { height: 100%; background: var(--bg-deep); color: var(--text-main); font-family: 'Noto Sans KR', sans-serif; overflow: hidden; }
+#app { display: grid; grid-template-rows: 54px 38px 1fr 34px; height: 100vh; }
+
+/* ── HEADER ── */
+header { background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 18px; gap: 10px; }
+.header-brand h1 { font-family: 'Noto Serif KR', serif; font-size: 16px; font-weight: 700; color: var(--accent-hi); letter-spacing: 0.04em; }
+.header-brand span { font-size: 11px; color: var(--text-dim); margin-left: 8px; }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ── TABS ── */
+#tab-bar { background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 12px; gap: 4px; overflow-x: auto; }
+.tab-btn { padding: 6px 14px; border-radius: 6px 6px 0 0; font-size: 12px; font-weight: 500; background: transparent; border: 1px solid transparent; border-bottom: none; color: var(--text-dim); cursor: pointer; white-space: nowrap; transition: all 0.18s; font-family: 'Noto Sans KR', sans-serif; }
+.tab-btn:hover { color: var(--text-sub); background: var(--bg-card); }
+.tab-btn.active { color: var(--accent-hi); background: var(--bg-deep); border-color: var(--border); }
+.tab-add { padding: 4px 10px; font-size: 16px; color: var(--text-dim); background: none; border: none; cursor: pointer; border-radius: 6px; transition: color 0.18s; font-family: 'Noto Sans KR', sans-serif; }
+.tab-add:hover { color: var(--accent-hi); }
+.tab-del { font-size: 10px; margin-left: 5px; opacity: 0.4; color: inherit; background: none; border: none; cursor: pointer; vertical-align: middle; font-family: 'Noto Sans KR', sans-serif; }
+.tab-del:hover { opacity: 1; }
+
+/* ── MAIN ── */
+main { display: grid; grid-template-columns: 1fr 250px; overflow: hidden; }
+
+/* ── BOARD ── */
+#board { position: relative; overflow: hidden; background: radial-gradient(ellipse at 20% 30%, rgba(60,30,120,0.15) 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(20,40,100,0.15) 0%, transparent 60%), var(--bg-deep); }
+#board::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(80,60,160,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(80,60,160,0.04) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
+#svg-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+#posts-container { position: absolute; inset: 0; z-index: 2; }
+#keywords-container { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+
+/* ── EMPTY HINT ── */
+#empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; pointer-events: none; transition: opacity 0.4s; }
+#empty-hint .lotus { font-size: 44px; margin-bottom: 12px; animation: float 3s ease-in-out infinite; }
+#empty-hint p { font-family: 'Noto Serif KR', serif; font-size: 13px; color: var(--text-dim); line-height: 2; }
+@keyframes float { 0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)} }
+
+/* ── POST-IT ── */
+.post-it { position: absolute; width: 148px; min-height: 110px; border-radius: 4px 4px 4px 0; padding: 9px 9px 7px; cursor: grab; user-select: none; display: flex; flex-direction: column; gap: 4px; box-shadow: 3px 4px 14px rgba(0,0,0,0.55); transition: box-shadow 0.18s; }
+.post-it:hover { box-shadow: 5px 6px 20px rgba(0,0,0,0.7); }
+.post-it.dragging { cursor: grabbing; transform: rotate(1.5deg) scale(1.04); z-index: 200 !important; }
+.post-it-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.post-name { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; opacity: 0.65; text-transform: uppercase; }
+.post-del { background: none; border: none; color: inherit; font-size: 15px; opacity: 0.35; padding: 0; line-height: 1; cursor: pointer; }
+.post-del:hover { opacity: 0.85; }
+.post-text { font-size: 12px; line-height: 1.55; flex: 1; word-break: break-word; }
+.post-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
+.post-tag { font-size: 9px; padding: 1px 5px; border-radius: 8px; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.75); }
+
+/* ── KEYWORD NODE ── */
+.kw-node { position: absolute; transform: translate(-50%,-50%); background: var(--bg-card); border: 1px solid var(--border-hi); border-radius: 20px; padding: 6px 14px; font-family: 'Noto Serif KR', serif; font-size: 12px; font-weight: 700; color: var(--accent-hi); white-space: nowrap; pointer-events: none; box-shadow: 0 0 16px rgba(124,92,252,0.25); opacity: 0; transition: opacity 0.5s ease; }
+.kw-node.visible { opacity: 1; }
+.kw-node .kw-count { font-size: 10px; color: var(--text-dim); margin-left: 4px; font-family: 'Noto Sans KR', sans-serif; font-weight: 400; }
+
+/* ── SIDEBAR ── */
+#sidebar { background: var(--bg-panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+.sidebar-section { padding: 13px 15px; border-bottom: 1px solid var(--border); }
+.sidebar-section:last-child { border-bottom: none; }
+.question-box { background: var(--bg-card); border: 1px solid var(--border-hi); border-radius: 10px; padding: 11px 13px; }
+.question-box p { font-family: 'Noto Serif KR', serif; font-size: 13px; color: var(--accent-hi); line-height: 1.8; }
+.section-title { font-family: 'Noto Serif KR', serif; font-size: 13px; color: var(--text-main); font-weight: 700; margin-bottom: 10px; }
+.field-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; font-weight: 500; }
+.field-group { margin-bottom: 10px; }
+input[type="text"], textarea { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; color: var(--text-main); font-family: 'Noto Sans KR', sans-serif; font-size: 12px; outline: none; transition: border-color 0.18s; resize: none; }
+input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
+.color-row { display: flex; gap: 7px; flex-wrap: wrap; }
+.color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2.5px solid transparent; transition: transform 0.15s, border-color 0.15s; }
+.color-dot:hover { transform: scale(1.15); }
+.color-dot.active { border-color: #fff; transform: scale(1.1); }
+.btn-add { width: 100%; padding: 9px; border-radius: 8px; font-size: 13px; font-weight: 700; background: var(--accent); color: #fff; border: none; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: background 0.18s; }
+.btn-add:hover { background: var(--accent-hi); }
+.btn-add:active { transform: scale(0.98); }
+
+/* ── BUTTONS ── */
+button { font-family: 'Noto Sans KR', sans-serif; cursor: pointer; border: none; outline: none; transition: all 0.18s; }
+.btn { padding: 6px 14px; border-radius: 20px; font-size: 12px; background: transparent; border: 1px solid var(--border); color: var(--text-sub); }
+.btn:hover { background: var(--bg-card); color: var(--text-main); border-color: var(--border-hi); }
+.btn-connect { padding: 7px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; background: linear-gradient(135deg, #2a0f6a, #0f2a6a); border: 1px solid var(--accent); color: var(--accent-hi); }
+.btn-connect:hover { background: linear-gradient(135deg, #3a1f7a, #1f3a7a); box-shadow: 0 0 18px rgba(124,92,252,0.35); }
+
+/* ── FB BADGE ── */
+#fb-badge { font-size: 10px; padding: 2px 10px; border-radius: 12px; background: rgba(0,200,100,0.15); border: 1px solid rgba(0,200,100,0.3); color: #4ade80; display: none; }
+
+/* ── FOOTER ── */
+footer { background: var(--bg-panel); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 20px; font-size: 11px; color: var(--text-dim); }
+footer span { color: var(--text-sub); font-weight: 500; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="header-brand">
+      <h1>🔮 인드라망 교실</h1>
+      <span>연기(緣起) — 모든 것은 서로 연결되어 있다</span>
+    </div>
+    <div class="header-actions">
+      <div id="fb-badge">🟢 실시간 연결됨</div>
+      <button class="btn" id="btn-copy-url" title="현재 반 URL 복사">🔗 반 URL 복사</button>
+      <button class="btn" id="btn-clear">선 지우기</button>
+      <button class="btn" id="btn-reset">이 반 초기화</button>
+      <button class="btn-connect" id="btn-connect">✦ 연결하기</button>
+    </div>
+  </header>
+
+  <div id="tab-bar">
+    <!-- 탭 동적 생성 -->
+    <button class="tab-add" id="btn-add-tab" title="반 추가">＋</button>
+  </div>
+
+  <main>
+    <div id="board">
+      <svg id="svg-lines"></svg>
+      <div id="posts-container"></div>
+      <div id="keywords-container"></div>
+      <div id="empty-hint">
+        <div class="lotus">🪷</div>
+        <p>오른쪽에서 의견을 작성하고<br>게시판에 붙여보세요<br><br>모든 것은 연결되어 있습니다</p>
+      </div>
+    </div>
+    <div id="sidebar">
+      <div class="sidebar-section">
+        <div class="question-box">
+          <p>오늘 아침 등교까지<br>도움을 준 사람이나<br>사물은 무엇인가요?</p>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="section-title">포스트잇 작성</div>
+        <div class="field-group">
+          <div class="field-label">이름 / 닉네임</div>
+          <input type="text" id="in-name" placeholder="예: 김민준" maxlength="12">
+        </div>
+        <div class="field-group">
+          <div class="field-label">내용</div>
+          <textarea id="in-text" rows="4" placeholder="예: 7번 버스 기사님, 엄마가 싸준 도시락..."></textarea>
+        </div>
+        <div class="field-group">
+          <div class="field-label">포스트잇 색상</div>
+          <div class="color-row" id="color-row"></div>
+        </div>
+        <button class="btn-add" id="btn-add-post">+ 게시판에 붙이기</button>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div>반 <span id="stat-class">-</span></div>
+    <div>포스트잇 <span id="stat-posts">0</span>개</div>
+    <div>공유 키워드 <span id="stat-kw">0</span>개</div>
+    <div>연결선 <span id="stat-lines">0</span>개</div>
+  </footer>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, remove, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ── Firebase 초기화 ───────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyD64DPexqlqf6IWRYBJ0iienZmT902WnMo",
+  authDomain: "indra-net-9535a.firebaseapp.com",
+  databaseURL: "https://indra-net-9535a-default-rtdb.firebaseio.com",
+  projectId: "indra-net-9535a",
+  storageBucket: "indra-net-9535a.firebasestorage.app",
+  messagingSenderId: "943286723895",
+  appId: "1:943286723895:web:2259dd2229e586a9f926b2"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+document.getElementById('fb-badge').style.display = 'inline-block';
+
+// ── 상수 ─────────────────────────────────────────────────
+const POST_COLORS = [
+  { bg: '#3d2e10', text: '#f5dfa0' },
+  { bg: '#102a1e', text: '#90f5c0' },
+  { bg: '#0e1e3d', text: '#90c5f5' },
+  { bg: '#2a0e2a', text: '#e890f5' },
+  { bg: '#2e0e0e', text: '#f59090' },
+  { bg: '#1e260e', text: '#d0f090' },
+  { bg: '#1e1810', text: '#f5e090' },
+  { bg: '#0e2030', text: '#90d8f5' },
+];
+const LINE_COLORS = ['#f87171','#fb923c','#fbbf24','#a3e635','#34d399','#22d3ee','#818cf8','#e879f9','#f472b6','#60a5fa','#4ade80','#facc15'];
+const STOPWORDS = new Set(['이','가','을','를','은','는','의','에','로','으로','와','과','도','만','에서','이다','하다','있다','없다','나','내가','제가','아침','오늘','그','저','때','것','수','더','좀','잘','또','막','정말','너무','많이','항상','그리고','그래서','하지만','근데','그냥','제','내','우리','이번','이렇게','어떻게','때문에','위해','해서','인해','통해','들이','들을','해주','해줘']);
+
+// ── 상태 ─────────────────────────────────────────────────
+let currentClass = null;   // 현재 탭 반 이름
+let classes = [];          // 반 목록
+let posts = [];            // 현재 반 포스트잇
+let selColor = 0;
+let isAnimating = false;
+let zMax = 10;
+let unsubscribe = null;    // Firebase 리스너 해제 함수
+
+// ── 색상 선택기 ──────────────────────────────────────────
+const colorRow = document.getElementById('color-row');
+POST_COLORS.forEach((c, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'color-dot' + (i === 0 ? ' active' : '');
+  dot.style.background = c.bg;
+  dot.style.boxShadow = `inset 0 0 0 2px ${c.text}50`;
+  dot.addEventListener('click', () => {
+    document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+    dot.classList.add('active');
+    selColor = i;
+  });
+  colorRow.appendChild(dot);
+});
+
+// ── 유틸 ────────────────────────────────────────────────
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function extractKeywords(text) {
+  const normalized = text.replace(/[.,!?~…。、·\-]/g,' ').replace(/\s+/g,' ');
+  let tokens = normalized.split(' ').filter(t => t.length >= 2);
+  tokens = tokens.map(t => {
+    for (const s of ['이에요','에요','이요','이야','야','이랑','랑','한테','에게','한','을','를','은','는','이','가']) {
+      if (t.endsWith(s) && t.length - s.length >= 2) return t.slice(0, t.length - s.length);
+    }
+    return t;
+  });
+  return [...new Set(tokens.filter(t => t.length >= 2 && !STOPWORDS.has(t)))].slice(0, 7);
+}
+
+function updateStats() {
+  document.getElementById('stat-class').textContent = currentClass || '-';
+  document.getElementById('stat-posts').textContent = posts.length;
+}
+
+function checkEmpty() {
+  document.getElementById('empty-hint').style.opacity = posts.length === 0 ? '1' : '0';
+}
+
+// ── 탭 관리 ─────────────────────────────────────────────
+async function loadClasses() {
+  const snap = await get(ref(db, 'classes'));
+  const val = snap.val();
+  classes = val ? Object.keys(val) : [];
+  if (classes.length === 0) {
+    await addClassToDb('1반');
+    classes = ['1반'];
+  }
+  renderTabs();
+
+  // URL 파라미터에 class가 있으면 해당 반으로 자동 이동
+  const params = new URLSearchParams(window.location.search);
+  const urlClass = params.get('class');
+  if (urlClass && classes.includes(urlClass)) {
+    switchClass(urlClass);
+  } else if (urlClass && !classes.includes(urlClass)) {
+    // URL에 명시된 반이 없으면 자동 생성
+    await addClassToDb(urlClass);
+    classes.push(urlClass);
+    renderTabs();
+    switchClass(urlClass);
+  } else {
+    switchClass(classes[0]);
+  }
+}
+
+async function addClassToDb(name) {
+  await set(ref(db, `classes/${name}`), true);
+}
+
+function renderTabs() {
+  const bar = document.getElementById('tab-bar');
+  bar.querySelectorAll('.tab-btn').forEach(el => el.remove());
+  const addBtn = document.getElementById('btn-add-tab');
+  classes.forEach(cls => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (cls === currentClass ? ' active' : '');
+    btn.innerHTML = `${esc(cls)}<button class="tab-del" data-cls="${esc(cls)}" title="반 삭제">✕</button>`;
+    btn.addEventListener('click', (e) => {
+      if (e.target.classList.contains('tab-del')) return;
+      switchClass(cls);
+    });
+    btn.querySelector('.tab-del').addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteClass(cls);
+    });
+    bar.insertBefore(btn, addBtn);
+  });
+}
+
+// 현재 반 URL 복사 버튼
+function getClassUrl(cls) {
+  const base = window.location.origin + window.location.pathname;
+  return `${base}?class=${encodeURIComponent(cls)}`;
+}
+
+async function deleteClass(cls) {
+  if (!confirm(`'${cls}'을(를) 삭제할까요? 모든 포스트잇이 사라져요.`)) return;
+  await set(ref(db, `classes/${cls}`), null);
+  await set(ref(db, `posts/${cls}`), null);
+  classes = classes.filter(c => c !== cls);
+  if (currentClass === cls) {
+    currentClass = classes[0] || null;
+    if (!currentClass) {
+      await addClassToDb('1반');
+      classes = ['1반'];
+      currentClass = '1반';
+    }
+  }
+  renderTabs();
+  switchClass(currentClass);
+}
+
+function switchClass(cls) {
+  currentClass = cls;
+  clearBoard();
+  renderTabs();
+  updateStats();
+  checkEmpty();
+
+  // 기존 Firebase 리스너 해제
+  if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+
+  // 새 반 리스너 등록
+  const postsRef = ref(db, `posts/${cls}`);
+  unsubscribe = onValue(postsRef, snap => {
+    const val = snap.val();
+    const remotePosts = val ? Object.entries(val).map(([fbId, d]) => ({ ...d, fbId })) : [];
+    // 전체 다시 그리기
+    posts = [];
+    document.getElementById('posts-container').innerHTML = '';
+    clearBoard();
+    remotePosts.forEach(rp => {
+      const post = {
+        id: rp.fbId,
+        fbId: rp.fbId,
+        name: rp.name || '익명',
+        text: rp.text || '',
+        keywords: extractKeywords(rp.text || ''),
+        color: POST_COLORS[rp.colorIdx ?? 0],
+        colorIdx: rp.colorIdx ?? 0,
+        x: rp.x ?? (20 + Math.random() * 300),
+        y: rp.y ?? (20 + Math.random() * 300),
+      };
+      posts.push(post);
+      createPostEl(post);
+    });
+    updateStats();
+    checkEmpty();
+  });
+}
+
+// ── 반 추가 ──────────────────────────────────────────────
+document.getElementById('btn-add-tab').addEventListener('click', async () => {
+  const name = prompt('새 반 이름을 입력하세요 (예: 2반, 3-1반)');
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  if (classes.includes(trimmed)) { alert('이미 있는 반 이름이에요!'); return; }
+  await addClassToDb(trimmed);
+  classes.push(trimmed);
+  renderTabs();
+  switchClass(trimmed);
+});
+
+// ── 포스트잇 렌더 ────────────────────────────────────────
+function createPostEl(post) {
+  const el = document.createElement('div');
+  el.className = 'post-it';
+  el.id = 'post-' + post.id;
+  el.style.cssText = `left:${post.x}px; top:${post.y}px; background:${post.color.bg}; color:${post.color.text}; z-index:${zMax++}`;
+  el.innerHTML = `
+    <div class="post-it-header">
+      <span class="post-name">${esc(post.name)}</span>
+      <button class="post-del" title="삭제">×</button>
+    </div>
+    <div class="post-text">${esc(post.text)}</div>
+    <div class="post-tags">${post.keywords.map(k=>`<span class="post-tag">#${esc(k)}</span>`).join('')}</div>
+  `;
+  el.querySelector('.post-del').addEventListener('click', e => { e.stopPropagation(); removePost(post); });
+  makeDraggable(el, post);
+  document.getElementById('posts-container').appendChild(el);
+}
+
+function makeDraggable(el, post) {
+  let active = false, ox = 0, oy = 0;
+  const start = (cx, cy) => { active = true; ox = cx - parseFloat(el.style.left); oy = cy - parseFloat(el.style.top); el.classList.add('dragging'); el.style.zIndex = ++zMax; };
+  const move = (cx, cy) => {
+    if (!active) return;
+    const b = document.getElementById('board');
+    post.x = Math.max(0, Math.min(b.clientWidth - 155, cx - ox));
+    post.y = Math.max(0, Math.min(b.clientHeight - 120, cy - oy));
+    el.style.left = post.x + 'px'; el.style.top = post.y + 'px';
+  };
+  const end = () => { if (!active) return; active = false; el.classList.remove('dragging'); };
+  el.addEventListener('mousedown', e => { if (e.target.classList.contains('post-del')) return; start(e.clientX, e.clientY); e.preventDefault(); });
+  el.addEventListener('touchstart', e => { if (e.target.classList.contains('post-del')) return; start(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+  document.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+  document.addEventListener('touchmove', e => move(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+  document.addEventListener('mouseup', end);
+  document.addEventListener('touchend', end);
+}
+
+// ── 포스트잇 추가 ────────────────────────────────────────
+async function addPost(name, text) {
+  if (!currentClass) return;
+  const board = document.getElementById('board');
+  const bw = board.clientWidth || 700, bh = board.clientHeight || 500;
+  const isRight = posts.length % 2 === 1;
+  const x = isRight ? bw * 0.6 + Math.random() * (bw * 0.3) : 20 + Math.random() * (bw * 0.3);
+  const y = 20 + Math.random() * (bh - 140);
+  const postData = { name: name || '익명', text, colorIdx: selColor, x, y };
+  await push(ref(db, `posts/${currentClass}`), postData);
+  // onValue 리스너가 자동으로 UI 업데이트
+}
+
+// ── 포스트잇 삭제 ────────────────────────────────────────
+async function removePost(post) {
+  if (!currentClass || !post.fbId) return;
+  await remove(ref(db, `posts/${currentClass}/${post.fbId}`));
+}
+
+// ── 보드 초기화 ──────────────────────────────────────────
+function clearBoard() {
+  const svg = document.getElementById('svg-lines');
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const kwc = document.getElementById('keywords-container');
+  while (kwc.firstChild) kwc.removeChild(kwc.firstChild);
+  document.getElementById('stat-lines').textContent = '0';
+  document.getElementById('stat-kw').textContent = '0';
+}
+
+// ── 포스트잇 중심 ────────────────────────────────────────
+function postCenter(post) { return { x: post.x + 74, y: post.y + 55 }; }
+
+// ── 연결하기 ─────────────────────────────────────────────
+function connectAll() {
+  if (isAnimating || posts.length < 2) {
+    if (posts.length < 2) alert('포스트잇이 2개 이상 있어야 연결할 수 있어요!');
+    return;
+  }
+  isAnimating = true;
+  clearBoard();
+
+  const board = document.getElementById('board');
+  const bw = board.clientWidth, bh = board.clientHeight;
+  const cx = bw / 2, cy = bh / 2;
+
+  // 키워드별 포스트 그룹핑 (2개 이상 공유된 것만)
+  const kwMap = {};
+  posts.forEach(p => p.keywords.forEach(kw => {
+    if (!kwMap[kw]) kwMap[kw] = [];
+    kwMap[kw].push(p);
+  }));
+  const shared = Object.entries(kwMap).filter(([, ps]) => ps.length >= 2);
+
+  if (shared.length === 0) {
+    isAnimating = false;
+    alert('공통 키워드가 없어요. 내용을 더 구체적으로 적어보세요!');
+    return;
+  }
+
+  // 키워드 노드 위치 (가운데 원형 배치)
+  const kwCount = shared.length;
+  const radius = Math.min(bw, bh) * 0.2;
+  const kwPositions = {};
+  shared.forEach(([kw], i) => {
+    const angle = (2 * Math.PI * i / kwCount) - Math.PI / 2;
+    kwPositions[kw] = {
+      x: cx + (kwCount === 1 ? 0 : radius * Math.cos(angle)),
+      y: cy + (kwCount === 1 ? 0 : radius * Math.sin(angle)),
+    };
+  });
+
+  // 키워드 노드 색상
+  const kwColor = {};
+  shared.forEach(([kw], i) => { kwColor[kw] = LINE_COLORS[i % LINE_COLORS.length]; });
+
+  // 키워드 노드 DOM
+  const kwc = document.getElementById('keywords-container');
+  shared.forEach(([kw, ps]) => {
+    const pos = kwPositions[kw];
+    const node = document.createElement('div');
+    node.className = 'kw-node';
+    node.style.left = pos.x + 'px';
+    node.style.top = pos.y + 'px';
+    node.style.borderColor = kwColor[kw];
+    node.style.boxShadow = `0 0 16px ${kwColor[kw]}44`;
+    node.innerHTML = `#${esc(kw)}<span class="kw-count">${ps.length}명</span>`;
+    kwc.appendChild(node);
+    requestAnimationFrame(() => requestAnimationFrame(() => node.classList.add('visible')));
+  });
+
+  // 연결선 (포스트잇 → 키워드 노드)
+  const svg = document.getElementById('svg-lines');
+  let lineCount = 0;
+  const drawn = new Set();
+  shared.forEach(([kw, ps]) => {
+    const kwPos = kwPositions[kw];
+    ps.forEach(post => {
+      const key = post.id + '@' + kw;
+      if (drawn.has(key)) return;
+      drawn.add(key);
+      drawLine(svg, postCenter(post), kwPos, kwColor[kw]);
+      lineCount++;
+    });
+  });
+
+  document.getElementById('stat-lines').textContent = lineCount;
+  document.getElementById('stat-kw').textContent = shared.length;
+  setTimeout(() => { isAnimating = false; }, 1700);
+}
+
+// ── 선 그리기 ────────────────────────────────────────────
+function drawLine(svg, from, to, color) {
+  const len = Math.hypot(to.x - from.x, to.y - from.y);
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', from.x); line.setAttribute('y1', from.y);
+  line.setAttribute('x2', to.x);   line.setAttribute('y2', to.y);
+  line.setAttribute('stroke', color);
+  line.setAttribute('stroke-width', '1.6');
+  line.setAttribute('stroke-linecap', 'round');
+  line.style.strokeDasharray = len + 'px';
+  line.style.strokeDashoffset = len + 'px';
+  line.style.strokeOpacity = '0';
+  line.style.transition = 'stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1), stroke-opacity 0.4s ease';
+  svg.appendChild(line);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    line.style.strokeDashoffset = '0px';
+    line.style.strokeOpacity = '0.65';
+  }));
+}
+
+// ── 이벤트 ──────────────────────────────────────────────
+document.getElementById('btn-add-post').addEventListener('click', async () => {
+  const name = document.getElementById('in-name').value.trim();
+  const text = document.getElementById('in-text').value.trim();
+  if (!text) { document.getElementById('in-text').focus(); return; }
+  await addPost(name, text);
+  document.getElementById('in-name').value = '';
+  document.getElementById('in-text').value = '';
+});
+
+document.getElementById('in-text').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btn-add-post').click(); }
+});
+
+document.getElementById('btn-connect').addEventListener('click', connectAll);
+document.getElementById('btn-clear').addEventListener('click', clearBoard);
+
+document.getElementById('btn-copy-url').addEventListener('click', () => {
+  if (!currentClass) return;
+  const url = getClassUrl(currentClass);
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('btn-copy-url');
+    const original = btn.textContent;
+    btn.textContent = '✅ 복사됨!';
+    setTimeout(() => { btn.textContent = original; }, 2000);
+  });
+});
+document.getElementById('btn-reset').addEventListener('click', async () => {
+  if (!currentClass) return;
+  if (!confirm(`'${currentClass}'의 모든 포스트잇을 삭제할까요?`)) return;
+  await set(ref(db, `posts/${currentClass}`), null);
+});
+
+// ── 시작 ────────────────────────────────────────────────
+loadClasses();
+</script>
+</body>
+</html>
