@@ -106,6 +106,88 @@ button { font-family: 'Noto Sans KR', sans-serif; cursor: pointer; border: none;
 /* ── FOOTER ── */
 footer { background: var(--bg-panel); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 20px; font-size: 11px; color: var(--text-dim); }
 footer span { color: var(--text-sub); font-weight: 500; }
+
+/* ── MOBILE ─────────────────────────────────────────────── */
+@media (max-width: 680px) {
+  #app { grid-template-rows: 48px 38px 1fr auto 34px; }
+
+  /* 헤더 */
+  header { padding: 0 10px; gap: 6px; }
+  .header-brand h1 { font-size: 14px; }
+  .header-brand span { display: none; }
+  .header-actions { gap: 5px; }
+  .btn { padding: 5px 8px; font-size: 11px; }
+  .btn-connect { padding: 5px 10px; font-size: 11px; }
+  #btn-copy-url { display: none; } /* 모바일에선 숨김 - 탭 내부로 이동 */
+
+  /* 탭바 */
+  #tab-bar { padding: 0 8px; gap: 3px; }
+  .tab-btn { padding: 5px 10px; font-size: 11px; }
+
+  /* 메인 - 위아래 분리 */
+  main { grid-template-columns: 1fr; grid-template-rows: 45vh 1fr; }
+
+  /* 게시판 */
+  #board { min-height: 45vh; }
+
+  /* 사이드바 - 아래로 */
+  #sidebar {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    overflow-y: auto;
+    max-height: 55vh;
+  }
+
+  /* 사이드바 내부 가로 배치 */
+  #sidebar { display: flex; flex-direction: column; }
+  .sidebar-section { padding: 10px 12px; }
+
+  /* 질문박스 */
+  .question-box p { font-size: 12px; line-height: 1.6; }
+
+  /* 입력폼 가로 배치 */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* 이름+내용 한줄로 */
+  #sidebar .sidebar-section:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  input[type="text"], textarea { font-size: 13px; padding: 7px 9px; }
+  textarea { min-height: 60px; }
+
+  /* 색상 선택 */
+  .color-row { gap: 8px; }
+  .color-dot { width: 26px; height: 26px; }
+
+  /* 붙이기 버튼 */
+  .btn-add { padding: 10px; font-size: 14px; }
+
+  /* 포스트잇 크기 축소 */
+  .post-it { width: 110px; min-height: 85px; padding: 7px; }
+  .post-text { font-size: 11px; }
+  .post-name { font-size: 9px; }
+  .post-tag { font-size: 8px; }
+
+  /* 키워드 노드 */
+  .kw-node { font-size: 10px; padding: 4px 10px; }
+
+  /* 푸터 */
+  footer { gap: 10px; font-size: 10px; padding: 0 10px; }
+
+  /* 빈 힌트 */
+  #empty-hint .lotus { font-size: 32px; }
+  #empty-hint p { font-size: 11px; }
+}
+
+@media (max-width: 400px) {
+  .header-brand h1 { font-size: 13px; }
+  .btn { padding: 4px 6px; font-size: 10px; }
+  .btn-connect { padding: 4px 8px; font-size: 10px; }
+  .tab-btn { padding: 4px 8px; font-size: 10px; }
+}
 </style>
 </head>
 <body>
@@ -144,6 +226,7 @@ footer span { color: var(--text-sub); font-weight: 500; }
         <div class="question-box">
           <p>오늘 아침 등교까지<br>도움을 준 사람이나<br>사물은 무엇인가요?</p>
         </div>
+        <button class="btn" id="btn-copy-url-mobile" style="margin-top:8px; width:100%; text-align:center; display:none;">🔗 이 반 URL 복사 (QR용)</button>
       </div>
       <div class="sidebar-section">
         <div class="section-title">포스트잇 작성</div>
@@ -564,16 +647,31 @@ document.getElementById('in-text').addEventListener('keydown', e => {
 document.getElementById('btn-connect').addEventListener('click', connectAll);
 document.getElementById('btn-clear').addEventListener('click', clearBoard);
 
-document.getElementById('btn-copy-url').addEventListener('click', () => {
+function copyClassUrl() {
   if (!currentClass) return;
   const url = getClassUrl(currentClass);
   navigator.clipboard.writeText(url).then(() => {
-    const btn = document.getElementById('btn-copy-url');
-    const original = btn.textContent;
-    btn.textContent = '✅ 복사됨!';
-    setTimeout(() => { btn.textContent = original; }, 2000);
+    ['btn-copy-url', 'btn-copy-url-mobile'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      const original = btn.textContent;
+      btn.textContent = '✅ 복사됨!';
+      setTimeout(() => { btn.textContent = original; }, 2000);
+    });
   });
-});
+}
+
+document.getElementById('btn-copy-url').addEventListener('click', copyClassUrl);
+document.getElementById('btn-copy-url-mobile').addEventListener('click', copyClassUrl);
+
+// 모바일 여부에 따라 버튼 표시
+function updateMobileButtons() {
+  const isMobile = window.innerWidth <= 680;
+  const mobileBtn = document.getElementById('btn-copy-url-mobile');
+  if (mobileBtn) mobileBtn.style.display = isMobile ? 'block' : 'none';
+}
+updateMobileButtons();
+window.addEventListener('resize', updateMobileButtons);
 document.getElementById('btn-reset').addEventListener('click', async () => {
   if (!currentClass) return;
   if (!confirm(`'${currentClass}'의 모든 포스트잇을 삭제할까요?`)) return;
