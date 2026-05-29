@@ -132,7 +132,7 @@ input[type=text]:focus,textarea:focus{border-color:var(--acc);}
 #comp-side-edit{flex:1;}
 
 /* SHARE SCREEN */
-#sc-share{overflow-y:auto;padding:20px;display:none;}
+#sc-share{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px;display:none;}
 #sc-share.active{display:block;}
 .share-header{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--gold);margin-bottom:6px;}
 .share-sub{font-size:12px;color:var(--dim);margin-bottom:20px;}
@@ -154,14 +154,82 @@ footer span{color:var(--sub);font-weight:500;}
 #fbbadge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(0,200,100,.15);border:1px solid rgba(0,200,100,.3);color:#4ade80;display:none;}
 
 @media(max-width:680px){
+  /* 앱 전체 */
   #app{grid-template-rows:48px 34px 32px 1fr 30px;}
+  html,body{overflow:hidden;}
+
+  /* 헤더 */
   .hbrand span{display:none;}
   .hbrand h1{font-size:13px;}
-  .hactions{gap:4px;}
-  .btn,.btnp,.btnw{padding:4px 8px;font-size:10px;}
-  #sc-indra,#sc-comp{grid-template-columns:1fr;grid-template-rows:52vh 1fr;}
-  #sidebar,#comp-side{border-left:none;border-top:1px solid var(--border);max-height:48vh;}
+  .hactions{gap:3px;flex-wrap:nowrap;}
+  .btn,.btnp,.btnw{padding:4px 7px;font-size:10px;}
   #btn-copyurl{display:none;}
+
+  /* 탭 */
+  #classtabs{padding:0 6px;}
+  .ctab{padding:4px 8px;font-size:10px;}
+  #modetabs{padding:0 8px;}
+  .mtab{padding:6px 10px;font-size:11px;}
+
+  /* 인드라망 — 위아래 분리 */
+  #sc-indra{grid-template-columns:1fr;grid-template-rows:45vh 1fr;}
+  #board{min-height:45vh;}
+  #sidebar{
+    border-left:none;
+    border-top:1px solid var(--border);
+    height:55vh;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  /* 자비 활동 — 위아래 분리 */
+  #sc-comp{grid-template-columns:1fr;grid-template-rows:45vh 1fr;}
+  #comp-canvas{min-height:45vh;}
+  #comp-side{
+    border-left:none;
+    border-top:1px solid var(--border);
+    height:55vh;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  #comp-side-list,#comp-side-edit{
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  /* 활동 공유 */
+  #sc-share{
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:14px;
+  }
+  .share-grid{grid-template-columns:1fr;}
+
+  /* 포스트잇 */
+  .postit{width:120px;min-height:90px;padding:7px;}
+  .ptext{font-size:10px;}
+  .pname{font-size:9px;}
+
+  /* 키워드 노드 */
+  .kwnode{font-size:10px;padding:4px 10px;}
+
+  /* 자비 질문 노드 */
+  .comp-qnode{font-size:10px;padding:6px 10px;max-width:140px;}
+  .comp-root{font-size:12px;padding:8px 14px;}
+
+  /* 입력폼 */
+  input[type=text],textarea{font-size:13px;padding:8px 10px;}
+  .btnadd{padding:10px;font-size:13px;}
+  .btnw{padding:8px 12px;}
+
+  /* 푸터 */
+  footer{gap:10px;font-size:10px;padding:0 10px;}
+}
+
+@media(max-width:380px){
+  .hbrand h1{font-size:12px;}
+  .btn,.btnp,.btnw{padding:3px 5px;font-size:9px;}
+  .mtab{padding:5px 7px;font-size:10px;}
 }
 </style>
 </head>
@@ -465,7 +533,8 @@ function makeDrag(el,data,boardId){
     data.x=Math.max(0,Math.min(b.clientWidth-150,e.touches[0].clientX-ox));
     data.y=Math.max(0,Math.min(b.clientHeight-115,e.touches[0].clientY-oy));
     el.style.left=data.x+'px';el.style.top=data.y+'px';
-  },{passive:true});
+    if(active) e.preventDefault(); // 드래그 중일 때만 스크롤 방지
+  },{passive:false});
   const end=()=>{if(!active)return;active=false;el.classList.remove('dragging');};
   document.addEventListener('mouseup',end);document.addEventListener('touchend',end);
 }
