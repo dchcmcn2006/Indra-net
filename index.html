@@ -50,8 +50,8 @@ button{font-family:'Noto Sans KR',sans-serif;cursor:pointer;border:none;outline:
 .mtab.active-share{color:var(--gold);border-bottom-color:var(--gold);}
 
 /* SCREENS */
-.screen{display:none;height:100%;}
-.screen.active{display:grid;}
+.screen{display:none !important;height:100%;}
+.screen.active{display:grid !important;}
 #sc-indra{grid-template-columns:1fr 250px;}
 #sc-comp{grid-template-columns:1fr 260px;}
 #sc-share{grid-template-columns:1fr;}
@@ -132,8 +132,8 @@ input[type=text]:focus,textarea:focus{border-color:var(--acc);}
 #comp-side-edit{flex:1;}
 
 /* SHARE SCREEN */
-#sc-share{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px;display:none;}
-#sc-share.active{display:block;}
+#sc-share{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px;}
+#sc-share.active{display:block !important;}
 .share-header{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--gold);margin-bottom:6px;}
 .share-sub{font-size:12px;color:var(--dim);margin-bottom:20px;}
 .share-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
@@ -154,7 +154,7 @@ footer span{color:var(--sub);font-weight:500;}
 #fbbadge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(0,200,100,.15);border:1px solid rgba(0,200,100,.3);color:#4ade80;display:none;}
 
 @media(max-width:680px){
-  /* 헤더 */
+  /* 헤더 - 부제목 숨기고 버튼 축소 */
   .hbrand span{display:none;}
   .hbrand h1{font-size:13px;}
   .hactions{gap:3px;}
@@ -167,56 +167,44 @@ footer span{color:var(--sub);font-weight:500;}
   #modetabs{padding:0 8px;}
   .mtab{padding:6px 10px;font-size:11px;}
 
-  /* 인드라망: 게시판(위) + 입력란(아래) */
-  #sc-indra{
-    grid-template-columns:1fr !important;
-    grid-template-rows:42vh 1fr !important;
-  }
-  #board{overflow:hidden;}
-  #sidebar{
-    border-left:none;
-    border-top:1px solid var(--border);
-    overflow-y:auto !important;
-    -webkit-overflow-scrolling:touch;
-    padding-bottom:40px;
-  }
+  /* 인드라망 - PC처럼 좌우 유지, 사이드바만 좁게 */
+  #sc-indra{grid-template-columns:1fr 200px !important;}
+  #sidebar{overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .ssec{padding:10px 12px;}
+  .qbox p{font-size:11px;}
+  .stitle{font-size:11px;}
+  .flabel{font-size:9px;}
+  input[type=text],textarea{font-size:16px;padding:8px;}
+  .btnadd{padding:9px;font-size:12px;}
+  .colorrow{gap:5px;}
+  .coldot{width:20px;height:20px;}
 
-  /* 자비 활동: 캔버스(위) + 입력란(아래) */
-  #sc-comp{
-    grid-template-columns:1fr !important;
-    grid-template-rows:40vh 1fr !important;
-  }
-  #comp-canvas{overflow:hidden;}
-  #comp-side{
-    border-left:none;
-    border-top:1px solid var(--border);
-    overflow-y:auto !important;
-    -webkit-overflow-scrolling:touch;
-    padding-bottom:40px;
-  }
+  /* 자비 활동 - PC처럼 좌우 유지, 사이드바만 좁게 */
+  #sc-comp{grid-template-columns:1fr 200px !important;}
+  #comp-side{overflow-y:auto;-webkit-overflow-scrolling:touch;}
 
-  /* 활동 공유 */
-  #sc-share{
-    overflow-y:auto !important;
-    -webkit-overflow-scrolling:touch;
-    padding:14px;
-    padding-bottom:40px;
-  }
+  /* 활동 공유 - 한 컬럼 */
   .share-grid{grid-template-columns:1fr;}
+  #sc-share.active{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;}
 
-  /* 포스트잇 */
-  .postit{width:115px;min-height:88px;padding:7px;}
+  /* 포스트잇 작게 */
+  .postit{width:100px;min-height:80px;padding:6px;}
   .ptext{font-size:10px;}
   .pname{font-size:9px;}
-  .kwnode{font-size:10px;padding:4px 10px;}
-  .comp-qnode{font-size:10px;padding:6px 10px;max-width:140px;}
-  .comp-root{font-size:12px;padding:8px 14px;}
+  .ptag{font-size:8px;}
+  .kwnode{font-size:9px;padding:3px 8px;}
+  .comp-qnode{font-size:9px;padding:5px 8px;max-width:120px;}
+  .comp-root{font-size:11px;padding:6px 12px;}
 
-  /* 입력폼 (16px = iOS 자동확대 방지) */
-  input[type=text],textarea{font-size:16px;padding:10px;}
-  .btnadd,.btnw{padding:12px;font-size:14px;}
-  .ssec{padding:12px;}
-  footer{gap:10px;font-size:10px;padding:0 10px;}
+  /* 푸터 */
+  footer{gap:8px;font-size:10px;padding:0 8px;}
+}
+
+@media(max-width:380px){
+  .hbrand h1{font-size:12px;}
+  .btn,.btnp,.btnw{padding:3px 5px;font-size:9px;}
+  #sc-indra{grid-template-columns:1fr 180px !important;}
+  #sc-comp{grid-template-columns:1fr 180px !important;}
 }
 
 @media(max-width:380px){
